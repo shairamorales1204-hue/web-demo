@@ -1,153 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Catch the Heart 💖</title>
+<meta charset="UTF-8">
+<title>Pink Fluffy Bird 💗</title>
 
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #ffd6e8, #e0c3fc);
-      font-family: "Poppins", Arial, sans-serif;
-    }
+<style>
+  body {
+    margin: 0;
+    background: linear-gradient(#ffd6e8, #cdb4db);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: "Poppins", Arial, sans-serif;
+  }
 
-    .game {
-      background: white;
-      padding: 20px;
-      border-radius: 25px;
-      width: 320px;
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    }
+  canvas {
+    background: linear-gradient(#bde0fe, #ffc8dd);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  }
 
-    h1 {
-      color: #6a4c93;
-      margin-bottom: 10px;
-    }
-
-    .score, .time {
-      font-size: 18px;
-      margin: 5px;
-      color: #5a3d8a;
-    }
-
-    .play-area {
-      position: relative;
-      margin: 15px auto;
-      width: 260px;
-      height: 260px;
-      background: #f7f0ff;
-      border-radius: 20px;
-      overflow: hidden;
-    }
-
-    .heart {
-      position: absolute;
-      font-size: 30px;
-      cursor: pointer;
-      user-select: none;
-      animation: pop 0.3s ease;
-    }
-
-    @keyframes pop {
-      from { transform: scale(0); }
-      to { transform: scale(1); }
-    }
-
-    button {
-      background: #ff8fab;
-      border: none;
-      border-radius: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      color: white;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background: #ff6f91;
-    }
-  </style>
+  .hint {
+    position: absolute;
+    bottom: 30px;
+    color: #6a0572;
+    font-size: 16px;
+    opacity: 0.8;
+  }
+</style>
 </head>
 <body>
 
-  <div class="game">
-    <h1>Catch the Heart 💖</h1>
-    <div class="score">Score: <span id="score">0</span></div>
-    <div class="time">Time: <span id="time">20</span>s</div>
+<canvas id="game" width="350" height="500"></canvas>
+<div class="hint">Click or press SPACE to fly 💕</div>
 
-    <div class="play-area" id="playArea"></div>
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    <button onclick="startGame()">Start Game</button>
-  </div>
+let bird = {
+  x: 80,
+  y: 200,
+  size: 18,
+  gravity: 0.5,
+  lift: -8,
+  velocity: 0
+};
 
-  <script>
-    const playArea = document.getElementById("playArea");
-    const scoreEl = document.getElementById("score");
-    const timeEl = document.getElementById("time");
+let pipes = [];
+let frame = 0;
+let score = 0;
+let gameOver = false;
 
-    let score = 0;
-    let time = 20;
-    let gameInterval;
-    let timer;
+// Controls
+document.addEventListener("click", flap);
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") flap();
+});
 
-    function startGame() {
-      score = 0;
-      time = 20;
-      scoreEl.textContent = score;
-      timeEl.textContent = time;
-      playArea.innerHTML = "";
+function flap() {
+  if (gameOver) return;
+  bird.velocity = bird.lift;
+}
 
-      clearInterval(gameInterval);
-      clearInterval(timer);
+// Game loop
+function update() {
+  if (gameOver) return;
 
-      gameInterval = setInterval(createHeart, 800);
-      timer = setInterval(() => {
-        time--;
-        timeEl.textContent = time;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (time === 0) {
-          endGame();
-        }
-      }, 1000);
+  // Bird physics
+  bird.velocity += bird.gravity;
+  bird.y += bird.velocity;
+
+  // Draw bird
+  ctx.beginPath();
+  ctx.arc(bird.x, bird.y, bird.size, 0, Math.PI * 2);
+  ctx.fillStyle = "#ff5da2";
+  ctx.fill();
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Pipes
+  if (frame % 90 === 0) {
+    let gap = 120;
+    let top = Math.random() * 200 + 50;
+    pipes.push({
+      x: canvas.width,
+      top: top,
+      bottom: top + gap
+    });
+  }
+
+  pipes.forEach((pipe, i) => {
+    pipe.x -= 2.5;
+
+    ctx.fillStyle = "#ffafcc";
+    ctx.fillRect(pipe.x, 0, 40, pipe.top);
+    ctx.fillRect(pipe.x, pipe.bottom, 40, canvas.height);
+
+    // Collision
+    if (
+      bird.x + bird.size > pipe.x &&
+      bird.x - bird.size < pipe.x + 40 &&
+      (bird.y - bird.size < pipe.top ||
+       bird.y + bird.size > pipe.bottom)
+    ) {
+      endGame();
     }
 
-    function createHeart() {
-      const heart = document.createElement("div");
-      heart.classList.add("heart");
-      heart.textContent = "💖";
+    // Score
+    if (pipe.x + 40 === bird.x) score++;
 
-      const size = Math.random() * 10 + 25;
-      heart.style.fontSize = size + "px";
+    if (pipe.x < -40) pipes.splice(i, 1);
+  });
 
-      heart.style.left = Math.random() * 230 + "px";
-      heart.style.top = Math.random() * 230 + "px";
+  // Ground / ceiling
+  if (bird.y + bird.size > canvas.height || bird.y - bird.size < 0) {
+    endGame();
+  }
 
-      heart.onclick = () => {
-        score++;
-        scoreEl.textContent = score;
-        heart.remove();
-      };
+  // Score text
+  ctx.fillStyle = "#6a0572";
+  ctx.font = "20px Poppins";
+  ctx.fillText("Score: " + score, 20, 30);
 
-      playArea.appendChild(heart);
+  frame++;
+  requestAnimationFrame(update);
+}
 
-      setTimeout(() => {
-        if (heart.parentElement) heart.remove();
-      }, 1200);
-    }
+function endGame() {
+  gameOver = true;
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    function endGame() {
-      clearInterval(gameInterval);
-      clearInterval(timer);
-      alert("Time’s up! 💕 Your score: " + score);
-    }
-  </script>
+  ctx.fillStyle = "#6a0572";
+  ctx.font = "26px Poppins";
+  ctx.fillText("Game Over 💔", 90, 220);
+  ctx.font = "18px Poppins";
+  ctx.fillText("Score: " + score, 130, 255);
+  ctx.fillText("Refresh to try again ✨", 85, 290);
+}
+
+update();
+</script>
 
 </body>
 </html>
-
