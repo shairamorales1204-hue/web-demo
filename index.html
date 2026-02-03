@@ -1,72 +1,153 @@
-<style>
-  body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, #ffd6e8, #e0c3fc);
-    font-family: "Poppins", Arial, sans-serif;
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Catch the Heart 💖</title>
 
-  .calculator {
-    background: #fff;
-    padding: 20px;
-    border-radius: 25px;
-    width: 260px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  }
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #ffd6e8, #e0c3fc);
+      font-family: "Poppins", Arial, sans-serif;
+    }
 
-  .display {
-    width: 100%;
-    height: 55px;
-    font-size: 26px;
-    margin-bottom: 15px;
-    text-align: right;
-    padding: 10px;
-    border: none;
-    border-radius: 15px;
-    background: #f7f0ff;
-    color: #6a4c93;
-  }
+    .game {
+      background: white;
+      padding: 20px;
+      border-radius: 25px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
 
-  .buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
+    h1 {
+      color: #6a4c93;
+      margin-bottom: 10px;
+    }
 
-  button {
-    height: 50px;
-    font-size: 18px;
-    border: none;
-    border-radius: 15px;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
+    .score, .time {
+      font-size: 18px;
+      margin: 5px;
+      color: #5a3d8a;
+    }
 
-  button:active {
-    transform: scale(0.95);
-  }
+    .play-area {
+      position: relative;
+      margin: 15px auto;
+      width: 260px;
+      height: 260px;
+      background: #f7f0ff;
+      border-radius: 20px;
+      overflow: hidden;
+    }
 
-  .number {
-    background: #f1e9ff;
-    color: #5a3d8a;
-  }
+    .heart {
+      position: absolute;
+      font-size: 30px;
+      cursor: pointer;
+      user-select: none;
+      animation: pop 0.3s ease;
+    }
 
-  .operator {
-    background: #ffb3c6;
-    color: #fff;
-  }
+    @keyframes pop {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
 
-  .clear {
-    background: #ff8fab;
-    color: white;
-    grid-column: span 2;
-  }
+    button {
+      background: #ff8fab;
+      border: none;
+      border-radius: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
 
-  .equals {
-    background: #80ed99;
-    color: #1b4332;
-    grid-column: span 2;
-  }
-</style>
+    button:hover {
+      background: #ff6f91;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game">
+    <h1>Catch the Heart 💖</h1>
+    <div class="score">Score: <span id="score">0</span></div>
+    <div class="time">Time: <span id="time">20</span>s</div>
+
+    <div class="play-area" id="playArea"></div>
+
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <script>
+    const playArea = document.getElementById("playArea");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+
+    let score = 0;
+    let time = 20;
+    let gameInterval;
+    let timer;
+
+    function startGame() {
+      score = 0;
+      time = 20;
+      scoreEl.textContent = score;
+      timeEl.textContent = time;
+      playArea.innerHTML = "";
+
+      clearInterval(gameInterval);
+      clearInterval(timer);
+
+      gameInterval = setInterval(createHeart, 800);
+      timer = setInterval(() => {
+        time--;
+        timeEl.textContent = time;
+
+        if (time === 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function createHeart() {
+      const heart = document.createElement("div");
+      heart.classList.add("heart");
+      heart.textContent = "💖";
+
+      const size = Math.random() * 10 + 25;
+      heart.style.fontSize = size + "px";
+
+      heart.style.left = Math.random() * 230 + "px";
+      heart.style.top = Math.random() * 230 + "px";
+
+      heart.onclick = () => {
+        score++;
+        scoreEl.textContent = score;
+        heart.remove();
+      };
+
+      playArea.appendChild(heart);
+
+      setTimeout(() => {
+        if (heart.parentElement) heart.remove();
+      }, 1200);
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(timer);
+      alert("Time’s up! 💕 Your score: " + score);
+    }
+  </script>
+
+</body>
+</html>
+
